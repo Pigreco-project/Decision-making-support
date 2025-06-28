@@ -1,0 +1,31 @@
+version: '2'
+services:
+
+  rabbitmq:
+    image: library/rabbitmq:3.6
+    restart: on-failure
+    network_mode: bridge
+    ports:
+      # expose rabbitmq ports
+      - "8101:5672"
+
+  inasafe-headless-worker:
+    build: docker-headless
+    command: /docker-entrypoint.sh prod inasafe-headless-worker
+    working_dir: /home/app
+    volumes:
+      - ../inasafe:/usr/share/qgis/python/plugins/inasafe
+      - ../src:/home/app
+    environment:
+      - PYTHONPATH=/usr/share/qgis/python:/usr/share/qgis/python/plugins:/usr/share/qgis/python/plugins/inasafe:/home/app
+      - DISPLAY=:99
+      - C_FORCE_ROOT=True
+      - INASAFE_LOCALE=id
+      - INASAFE_HEADLESS_BROKER_HOST=amqp://guest:guest@rabbitmq:5672/
+      - INASAFE_WORK_DIR=/home/headless
+      - TASK_ALWAYS_EAGER=False
+      - ON_TRAVIS=False
+      - QGIS_DEBUG=0
+    links:
+      - rabbitmq
+    network_mode: bridge

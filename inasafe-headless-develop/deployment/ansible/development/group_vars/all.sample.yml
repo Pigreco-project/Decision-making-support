@@ -1,0 +1,53 @@
+---
+
+use_pycharm: yes
+remote_user: henok
+remote_group: staff
+project_path: "/Users/henok/Downloads/inasafe-headless-develop"
+
+interpreters:
+  inasafe_headless:
+    name: 'InaSAFE Headless Container'
+    domain_alias: 'docker-inasafe-headless'
+    ssh_port: &inasafe_headless_ssh_port 35107
+    ipaddress: &inasafe_headless_host_ip 192.168.100.4
+
+inasafe:
+  # Settings if you have different location of inasafe repo in your working dir
+#  custom_path: ../../inasafe
+  repo: https://github.com/inasafe/inasafe.git
+  remote: upstream
+  version: version-4_4_0
+  depth: 1
+
+inasafe_headless_worker:
+  command: dev
+  # Settings to specify broker url manually
+  broker_url:
+  # Optional settings to specify path mount
+  # Example of volume mount settings:
+#  volume_mount:
+#    headless_data:
+#      host_path: ../../inasafe-django/deployment/headless-data
+#      container_path: /home/headless
+#    realtime_data:
+#      host_path: ../../inasafe-django/deployment/realtime-hazard
+#      container_path: /home/realtime
+
+docker_port_forward:
+  inasafe_headless:
+    ssh: *inasafe_headless_ssh_port
+
+integration_test:
+  # Path to inasafe-headless's test data directory
+  test_data_path: "/Users/henok/Downloads/inasafe-headless-develop/src/headless/tasks/test/data/"
+  # Path to inasafe-headless's test data directory in the docker container
+  mapped_test_data_path: "/home/headless_test/data/"
+  # Path to inasafe-headless's output test data directory in the docker container
+  mapped_output_data_path: "/home/headless_test/data/result/"
+
+geonode_push:
+  enable: False
+  user: test_geonode_user
+  password: test_geonode_password
+  url: http://url_to_geonode_instance

@@ -1,0 +1,62 @@
+#jinja2: trim_blocks: "true", lstrip_blocks: "true"
+
+version: "2"
+services:
+
+  inasafe-headless-worker:
+    build: docker-headless
+    command: "{{ inasafe_headless_worker.command }}"
+    volumes:
+
+      {% if 'custom_path' in inasafe %}
+
+      - {{ inasafe.custom_path }}:/usr/share/qgis/python/plugins/inasafe
+
+      {% else %}
+
+      - ../inasafe:/usr/share/qgis/python/plugins/inasafe
+
+      {% endif %}
+
+      - ../src:/home/app
+      - ../src/headless/tasks/test/data/result:/home/headless/output
+      - ./pycharm-helpers/inasafe-headless:/root/.pycharm_helpers
+      - {{ integration_test.test_data_path }}:{{ integration_test.mapped_test_data_path }}
+
+      {% if 'volume_mount' in inasafe_headless_worker %}
+        {% for key, value in inasafe_headless_worker.volume_mount.iteritems() %}
+
+      - {{ value.host_path }}:{{ value.container_path }}
+
+        {% endfor %}
+      {% endif %}
+
+    environment:
+      - INASAFE_OUTPUT_DIR={{ integration_test.mapped_output_data_path }}
+      - COMMON_TEST_DATA={{ integration_test.mapped_test_data_path }}
+      - PUSH_TO_REALTIME_GEONODE={{ geonode_push.enable }}
+      - REALTIME_GEONODE_USER={{ geonode_push.user }}
+      - REALTIME_GEONODE_PASSWORD={{ geonode_push.password }}
+      - REALTIME_GEONODE_URL={{ geonode_push.url }}
+
+      {% if 'broker_url' in inasafe_headless_worker %}
+
+      - INASAFE_HEADLESS_BROKER_HOST={{ inasafe_headless_worker.broker_url }}
+
+      {% endif %}
+
+      {% if 'environment' in inasafe_headless_worker %}
+        {% for key, value in inasafe_headless_worker.environment.iteritems() %}
+
+      - {{ key }}={{ value }}
+
+        {% endfor %}
+      {% endif %}
+
+    {% if 'ssh' in docker_port_forward.inasafe_headless %}
+
+    ports:
+      # expose ssh ports
+      - "{{ docker_port_forward.inasafe_headless.ssh }}:22"
+
+    {% endif %}
